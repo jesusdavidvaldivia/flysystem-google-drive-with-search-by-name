@@ -1,13 +1,30 @@
-# Flysystem Adapter for Google Drive
+# Flysystem Adapter for Google Drive With Search By Name
 
 [![Author](https://img.shields.io/badge/author-nao--pon%20hypweb-blue.svg?style=flat)](http://xoops.hypweb.net/)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 
-## Installation
+## News
 Includes one new function and modifys other:
 
 getItemsByName($name) // returns an array of coincidendes
 getItems($dirname, $recursive = false, $maxResults = 0, $query = '') // same but now allows query filter from getItemsByName
+
+## News
+Require modify:
+
+Vendor/flysystem/adapterInterface.php
+adding: 
+```bash
+public function getItemsByName($name);
+```
+
+Vendor/flysystem/fileSystem.php
+adding: 
+```bash
+public function getItemsByName($name){
+	return $this->getAdapter()->getItemsByName($name);
+}
+```
 
 ## Installation
 
