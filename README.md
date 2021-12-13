@@ -5,10 +5,10 @@
 
 ## News
 Includes one new function and modifys other:
-
+```bash
 getItemsByName($name) // returns an array of coincidendes
 getItems($dirname, $recursive = false, $maxResults = 0, $query = '') // same but now allows query filter from getItemsByName
-
+```
 ## News
 Require modify:
 
