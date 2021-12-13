@@ -9,7 +9,7 @@ Includes one new function and modifys other:
 getItemsByName($name) // returns an array of coincidendes
 getItems($dirname, $recursive = false, $maxResults = 0, $query = '') // same but now allows query filter from getItemsByName
 ```
-## News
+## Require modify on laravel
 Require modify:
 
 Vendor/flysystem/adapterInterface.php
