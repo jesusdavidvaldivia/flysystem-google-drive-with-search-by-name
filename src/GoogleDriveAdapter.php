@@ -910,66 +910,70 @@ class GoogleDriveAdapter extends AbstractAdapter
      *
      * @return array Items array
      */
-    protected function getItems($dirname, $recursive = false, $maxResults = 0, $query = '')
-    {
-        list (, $itemId) = $this->splitPath($dirname);
+     public function getItemsByName($name){
+       $item = $this->getItems("",false,0," and name contains '$name'");
+       $item = (object) $item[0];
 
-        $maxResults = min($maxResults, 1000);
-        $results = [];
-        $parameters = [
-            'pageSize' => $maxResults ?: 1000,
-            'fields' => $this->fetchfieldsList,
-            'spaces' => $this->spaces,
-            'q' => sprintf('trashed = false and "%s" in parents', $itemId)
-        ];
-        if ($query) {
-            $parameters['q'] .= ' and (' . $query . ')';
-        }
-        $parameters = $this->applyDefaultParams($parameters, 'files.list');
-        $pageToken = NULL;
-        $gFiles = $this->service->files;
-        $this->cacheHasDirs[$itemId] = false;
-        $setHasDir = [];
+       return $this->getUrl($item->path);
+     }
 
-        do {
-            try {
-                if ($pageToken) {
-                    $parameters['pageToken'] = $pageToken;
-                }
-                $fileObjs = $gFiles->listFiles($parameters);
-                if ($fileObjs instanceof Google_Service_Drive_FileList) {
-                    foreach ($fileObjs as $obj) {
-                        $id = $obj->getId();
-                        $this->cacheFileObjects[$id] = $obj;
-                        $result = $this->normaliseObject($obj, $dirname);
-                        $results[$id] = $result;
-                        if ($result['type'] === 'dir') {
-                            if ($this->useHasDir) {
-                                $setHasDir[$id] = $id;
-                            }
-                            if ($this->cacheHasDirs[$itemId] === false) {
-                                $this->cacheHasDirs[$itemId] = true;
-                                unset($setHasDir[$itemId]);
-                            }
-                            if ($recursive) {
-                                $results = array_merge($results, $this->getItems($result['path'], true, $maxResults, $query));
-                            }
-                        }
-                    }
-                    $pageToken = $fileObjs->getNextPageToken();
-                } else {
-                    $pageToken = NULL;
-                }
-            } catch (Exception $e) {
-                $pageToken = NULL;
-            }
-        } while ($pageToken && $maxResults === 0);
+     protected function getItems($dirname, $recursive = false, $maxResults = 0, $query = '')
+     {
+         list (, $itemId) = $this->splitPath($dirname);
 
-        if ($setHasDir) {
-            $results = $this->setHasDir($setHasDir, $results);
-        }
-        return array_values($results);
-    }
+         $maxResults = min($maxResults, 1000);
+         $results = [];
+         $parameters = [
+             'pageSize' => $maxResults ?: 1000,
+             'fields' => $this->fetchfieldsList,
+             'spaces' => $this->spaces,
+             'q' => sprintf('trashed = false and "%s" in parents'.$query, $itemId)
+         ];
+         $parameters = $this->applyDefaultParams($parameters, 'files.list');
+         $pageToken = NULL;
+         $gFiles = $this->service->files;
+         $this->cacheHasDirs[$itemId] = false;
+         $setHasDir = [];
+
+         do {
+             try {
+                 if ($pageToken) {
+                     $parameters['pageToken'] = $pageToken;
+                 }
+                 $fileObjs = $gFiles->listFiles($parameters);
+                 if ($fileObjs instanceof Google_Service_Drive_FileList) {
+                     foreach ($fileObjs as $obj) {
+                         $id = $obj->getId();
+                         $this->cacheFileObjects[$id] = $obj;
+                         $result = $this->normaliseObject($obj, $dirname);
+                         $results[$id] = $result;
+                         if ($result['type'] === 'dir') {
+                             if ($this->useHasDir) {
+                                 $setHasDir[$id] = $id;
+                             }
+                             if ($this->cacheHasDirs[$itemId] === false) {
+                                 $this->cacheHasDirs[$itemId] = true;
+                                 unset($setHasDir[$itemId]);
+                             }
+                             if ($recursive) {
+                                 $results = array_merge($results, $this->getItems($result['path'], true, $maxResults, $query));
+                             }
+                         }
+                     }
+                     $pageToken = $fileObjs->getNextPageToken();
+                 } else {
+                     $pageToken = NULL;
+                 }
+             } catch (Exception $e) {
+                 $pageToken = NULL;
+             }
+         } while ($pageToken && $maxResults === 0);
+
+         if ($setHasDir) {
+             $results = $this->setHasDir($setHasDir, $results);
+         }
+         return array_values($results);
+     }
 
     /**
      * Get file oblect Google_Service_Drive_DriveFile
